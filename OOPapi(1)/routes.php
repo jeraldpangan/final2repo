@@ -7,6 +7,7 @@ require_once "./modules/Delete.php";
 require_once "./modules/Auth.php";
 require_once "./modules/Booking.php";
 require_once "./modules/Billing.php";
+
 $db = new Connection();
 $pdo = $db->connect();
 $post = new Post($pdo);
@@ -51,41 +52,41 @@ switch($_SERVER['REQUEST_METHOD']){
                     echo json_encode($get->getAdmin());
                 }
             break;
-            case "transaction":
-                echo $get->getTransaction();
+            case"billing":
+               // echo json_encode($book->generateBill($body));
             break;
             case"carchecking":
                 echo json_encode($book->carMenu());
             break;
-            case "billing":
-                echo json_encode($bill->getBillingDetails($request[1], $request[2]));
-            break;
+            
             default:
                 http_response_code(401);
                 echo "Invalid endpoint";
             break;
         }
     
-        }else{
-            echo "Unauthorized";
-        }
+    }else{
+        echo "Unauthorized";
+    }
+        
         break;
     case "POST":
+        
         $body = json_decode(file_get_contents("php://input"));
         switch($request[0]){
             case "cars":
+                if($auth->isAuthorized()){
                 echo json_encode($post->postCars($body));
-            break;
+                break;
+        }else{
+            echo "Unauthorized";
+        }
             case "users":
                 echo json_encode($post->postUsers($body));
             break;
-            case "admin":
-                echo json_encode($post->postAdmin($body));
-            break;
-            case "transaction":
-                echo $post->postTransaction();
-            break;
+            
             case "useraccount":
+                
                 echo json_encode($auth->addAccounts($body));
             break;
             
@@ -97,31 +98,59 @@ switch($_SERVER['REQUEST_METHOD']){
                 if($auth->isAuthorized()){
                 echo json_encode($book->carBooking($body));
             break;
-                }else{
-                    echo "Unauthorized";
-                }
+        }else{
+            echo "Unauthorized";
+        }
+            case "billing":
+                echo json_encode($bill->addPayment($body));
+            break;
             default:
                 http_response_code(400);
                 echo "Invalid endpoint";
             break;
         }
+        
     break;
+            
     case "PATCH":
+        if($auth->isAuthorized()){
         $body = json_decode(file_get_contents("php://input"));
         switch($request[0]){
             case "cars":
                 echo json_encode($patch->patchCars($body, $request[1]));
             break;
+
+            case "users":
+                echo json_encode($patch->patchUsers($body, $request[1]));
+            break;
+            case "useraccount":
+                echo json_encode($patch->patchUserAccount($body, $request[1]));
+            break;
+
+            default:
+            http_response_code(400);
+                echo "Invalid  Endpoint";
+            break;
+
         }
         break;
+    }else{
+        echo "Unauthorized";
+    }
     case "DELETE":
         switch($request[0]){
             case "cars":
                 echo json_encode($patch->archiveCars($request[1]));
             break;
+            case "users":
+                echo json_encode($patch->archiveUsers($request[1]));
+            break;
         }
             case "destroycars":
                 echo json_encode($delete->deleteCars($request[1]));
+            break;
+            case "destroyusers":
+                echo json_encode($delete->deleteUsers($request[1]));
             break;
     default:
         http_response_code(400);

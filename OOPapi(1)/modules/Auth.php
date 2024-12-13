@@ -6,6 +6,7 @@ class Authentication{
         $this->pdo = $pdo;
         
     }
+    
     public function isAuthorized(){
         $headers=getallheaders();
         
@@ -146,7 +147,7 @@ class Authentication{
             $sql->execute($values);
 
             $code = 200;
-            $message="User added successfully";
+            $message="Account created successfully";
             $data = null;
 
             return array("message"=>$message,"data"=>$data, "code"=>$code);
