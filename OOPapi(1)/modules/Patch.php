@@ -58,7 +58,7 @@ class Patch{
         array_push($values, $id);
         
         try{
-            $sqlString = "UPDATE userstable SET user_password =?, user_email=? WHERE userID = ?";
+            $sqlString = "UPDATE userstable SET name=?, contact_no=?, drivers_license=? WHERE userID = ?";
             $sql = $this->pdo->prepare($sqlString);
             $sql->execute($values);
             $code = 200;
@@ -72,6 +72,31 @@ class Patch{
         
         return array("errmsg"=>$errmsg, "code"=>$code);
     }
+    public function patchUserAccount($body, $id){
+        $values = [];
+        $errmsg = "";
+        $code = 0;
+        foreach($body as $value){
+            array_push($values, $value);
+        }
+        array_push($values, $id);
+        
+        try{
+            $sqlString = "UPDATE accountstable SET user_password=? WHERE userID = ?";
+            $sql = $this->pdo->prepare($sqlString);
+            $sql->execute($values);
+            $code = 200;
+            $data = null;
+            return array("data"=>$data, "code"=>$code);
+        }
+        catch(\PDOException $e){
+            $errmsg = $e->getMessage();
+            $code = 400;
+        }
+        
+        return array("errmsg"=>$errmsg, "code"=>$code);
+    }
+    
     public function archiveUsers($id){
         
         $errmsg = "";
@@ -93,5 +118,6 @@ class Patch{
         return array("errmsg"=>$errmsg, "code"=>$code);
     }
     
+
 }
 ?>

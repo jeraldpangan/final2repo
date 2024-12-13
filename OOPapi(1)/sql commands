@@ -55,4 +55,9 @@ CREATE TABLE accountstable (
     
     PRIMARY KEY (id)
 );
+//joining daily_rate from carstable to bookingtable
+UPDATE bookingtable
+INNER JOIN carstable ON bookingtable.carID = carstable.carID
+SET bookingtable.daily_rate = carstable.daily_rate
+WHERE bookingtable.daily_rate IS NULL;
 

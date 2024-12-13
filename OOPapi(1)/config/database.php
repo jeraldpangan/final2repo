@@ -5,7 +5,7 @@ header("Access-Control-Allow-Methods: POST, GET");
 header("Access-Control-Max-Age: 3600");
 date_default_timezone_set("Asia/Manila");
 define("SERVER", "localhost");
-define("DBASE", "oopapi1");
+define("DBASE", "oopapi2");
 define("USER", "root");
 define("PWORD", "");
 define("TOKEN_KEY","adsd321iojkljkaod");

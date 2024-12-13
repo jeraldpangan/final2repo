@@ -1,93 +1,127 @@
 <?php
 
-class Billing
-{
+class Billing {
     protected $pdo;
 
     public function __construct(\PDO $pdo){
         $this->pdo = $pdo;        
     }
-    public function createBilling($body) {
+
+    // Function to add payment and update billing table
+    public function addPayment($body) {
         $bookingID = $body->bookingID;
-        $carID = $body->carID;
-        $userID = $body->userID;
-        $totalCost = $body->total_cost;
         $amountPaid = $body->amount_paid;
-    
-        $sqlString = "INSERT INTO billingtable (bookingID, carID, userID, total_cost, amount_paid) 
-        VALUES (?, ?, ?, ?, ?)";
         $code = 0;
         $errmsg = "";
-        
+
         try {
-            $sql = $this->pdo->prepare($sqlString);
-            $sql->execute([$bookingID, $carID, $userID, $totalCost, $amountPaid]);
-            $code = 200;
+            // Validate if the booking exists
+            $bookingSql = "SELECT bookingID, userID FROM bookingtable WHERE bookingID = ?";
+            $bookingStmt = $this->pdo->prepare($bookingSql);
+            $bookingStmt->execute([$bookingID]);
+            $booking = $bookingStmt->fetch();
+
+            if (!$booking) {
+                return array("code" => 404, "errmsg" => "Booking not found.");
+            }
+
+            // Insert payment into billing table
+            $insertSql = "
+                INSERT INTO billingtable (bookingID, amount_paid) 
+                VALUES (?, ?)";
+            $insertStmt = $this->pdo->prepare($insertSql);
+            $insertStmt->execute([$bookingID, $amountPaid]);
+
+            // Update user's total amount paid (VIP points)
+            $this->updateVIPPoints($booking['userID'], $amountPaid);
+
+            return array(
+                "code" => 200,
+                "remarks" => "Success",
+                "message" => "Payment successfully recorded!"
+            );
+
         } catch (\PDOException $e) {
-            $errmsg = $e->getMessage();
-            $code = 500;
+            return array(
+                "code" => 500,
+                "errmsg" => "Database error: " . $e->getMessage()
+            );
         }
-    
-        return ["code" => $code, "errmsg" => $errmsg];
-    }
-    public function updateBilling($billingID, $amountPaid) {
-        $sqlString = "UPDATE billingtable 
-            SET amount_paid = amount_paid + ?, 
-            payment_status = CASE 
-            WHEN total_cost = amount_paid + ? THEN 'Paid'
-            WHEN total_cost > amount_paid + ? THEN 'Partial'
-            ELSE 'Pending'
-            END,
-            payment_date = CASE 
-            WHEN total_cost = amount_paid + ? THEN NOW()
-            ELSE payment_date
-            END
-            WHERE billingID = ?";
-        $code = 0;
-        $errmsg = "";
-    
-        try {
-            $sql = $this->pdo->prepare($sqlString);
-            $sql->execute([$amountPaid, $amountPaid, $amountPaid, $amountPaid, $billingID]);
-            $code = 200;
-        } catch (\PDOException $e) {
-            $errmsg = $e->getMessage();
-            $code = 500;
-        }
-    
-        return ["code" => $code, "errmsg" => $errmsg];
-    }
-    public function getBillingDetails($bookingID = null, $userID = null) {
-        $sqlString = "SELECT * FROM billingtable WHERE 1=1";
-        if ($bookingID) {
-            $sqlString .= " AND bookingID = ?";
-        }
-        if ($userID) {
-            $sqlString .= " AND userID = ?";
-        }
-    
-        $code = 0;
-        $data = [];
-        $errmsg = "";
-    
-        try {
-            $stmt = $this->pdo->prepare($sqlString);
-            $stmt->execute(array_filter([$bookingID, $userID]));
-            $data = $stmt->fetchAll();
-            $code = 200;
-        } catch (\PDOException $e) {
-            $errmsg = $e->getMessage();
-            $code = 500;
-        }
-    
-        return ["code" => $code, "data" => $data, "errmsg" => $errmsg];
-    }
-    public function calculateTotalCost($dailyRate, $startDate, $endDate) {
-        $start = new DateTime($startDate);
-        $end = new DateTime($endDate);
-        $interval = $start->diff($end);
-        $days = $interval->days + 1; // Include the start day
-        return $dailyRate * $days;
     }
 
+    // Function to update VIP points for the user
+    public function updateVIPPoints($userID, $amountPaid) {
+        try {
+            // Update the total amount paid by the user in accountstable (VIP points)
+            $updateSql = "
+                UPDATE accountstable 
+                SET vip_points = vip_points + ? 
+                WHERE userID = ?";
+            $updateStmt = $this->pdo->prepare($updateSql);
+            $updateStmt->execute([$amountPaid, $userID]);
+
+            // Check if the user's VIP points reach the threshold for VIP access
+            $this->checkVIPAccess($userID);
+
+        } catch (\PDOException $e) {
+            error_log("Error updating VIP points: " . $e->getMessage());
+        }
+    }
+
+    // Function to check if the user should be granted VIP access
+    private function checkVIPAccess($userID) {
+        try {
+            // Fetch the user's current VIP points
+            $checkSql = "SELECT vip_points FROM accountstable WHERE userID = ?";
+            $checkStmt = $this->pdo->prepare($checkSql);
+            $checkStmt->execute([$userID]);
+            $user = $checkStmt->fetch();
+
+            if ($user && $user['vip_points'] >= 500000) {
+                // Grant the user access to expensive cars
+                $this->grantVIPAccess($userID);
+            }
+        } catch (\PDOException $e) {
+            error_log("Error checking VIP access: " . $e->getMessage());
+        }
+    }
+
+    // Function to grant VIP access to expensive cars
+    private function grantVIPAccess($userID) {
+        try {
+            $updateSql = "UPDATE accountstable SET vip_access = 1 WHERE userID = ?";
+            $updateStmt = $this->pdo->prepare($updateSql);
+            $updateStmt->execute([$userID]);
+        } catch (\PDOException $e) {
+            error_log("Error granting VIP access: " . $e->getMessage());
+        }
+    }
+
+    // Function to compute the total amount paid by a user across all transactions
+    public function getTotalPaid($userID) {
+        try {
+            // Calculate the total amount paid by the user
+            $sql = "
+                SELECT SUM(amount_paid) as total_paid 
+                FROM billingtable b
+                INNER JOIN bookingtable bt ON b.bookingID = bt.bookingID
+                WHERE bt.userID = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$userID]);
+            $result = $stmt->fetch();
+
+            return array(
+                "code" => 200,
+                "total_paid" => $result['total_paid'] ?? 0
+            );
+
+        } catch (\PDOException $e) {
+            return array(
+                "code" => 500,
+                "errmsg" => "Database error: " . $e->getMessage()
+            );
+        }
+    }
 }
+
+?>
