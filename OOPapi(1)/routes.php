@@ -7,6 +7,7 @@ require_once "./modules/Delete.php";
 require_once "./modules/Auth.php";
 require_once "./modules/Booking.php";
 require_once "./modules/Billing.php";
+require_once "./modules/Common.php";
 
 $db = new Connection();
 $pdo = $db->connect();
@@ -44,17 +45,7 @@ switch($_SERVER['REQUEST_METHOD']){
                     echo json_encode($get->getUsers());
                 }
             break;
-            case "admin":
-                if(count($request) > 1){
-                    echo json_encode($get->getAdmin($request[1]));
-                }
-                else{
-                    echo json_encode($get->getAdmin());
-                }
-            break;
-            case"billing":
-               // echo json_encode($book->generateBill($body));
-            break;
+            
             case"carchecking":
                 echo json_encode($book->carMenu());
             break;
@@ -123,10 +114,7 @@ switch($_SERVER['REQUEST_METHOD']){
             case "users":
                 echo json_encode($patch->patchUsers($body, $request[1]));
             break;
-            case "useraccount":
-                echo json_encode($patch->patchUserAccount($body, $request[1]));
-            break;
-
+            
             default:
             http_response_code(400);
                 echo "Invalid  Endpoint";

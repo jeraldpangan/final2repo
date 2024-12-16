@@ -1,99 +1,35 @@
 <?php 
-class Get{
+include_once "./modules/Common.php";
+class Get extends Common{
     protected $pdo;
     public function __construct(\PDO $pdo){
         $this->pdo = $pdo;
     }
     public function getCars($id = null){
-        $sqlString = "SELECT * FROM carstable WHERE isdeleted=0";
+        $condition = "isdeleted=0";
         if($id != null){
-            $sqlString .= " AND carID=" . $id; 
+            $condition .= " AND carID=" . $id; 
         }
-        $data = array();
-        $errmsg = "";
-        $code = 0;
-        
-        try{
-            if($result = $this->pdo->query($sqlString)->fetchAll()){
-                foreach($result as $record){
-                    array_push($data, $record);
-                }
-                $result = null;
-                $code = 200;
-                return array("code"=>$code, "data"=>$data); 
-            }
-            else{
-                $errmsg = "No data found";
-                $code = 404;
-            }
+        $result= $this->getDataByTable("carstable", $condition,$this->pdo);
+        if($result['code'] == 200){
+            return $this->generateResponse($result['data'], "success", "Successfully retrieved records.", $result['code']);
         }
-        catch(\PDOException $e){
-            $errmsg = $e->getMessage();
-            $code = 403;
-        }
-        return array("code"=>$code, "errmsg"=>$errmsg);
+        return $this->generateResponse(null, "failed", $result['errmsg'], $result['code']);
     }
    public function getUsers($id = null){
-        $sqlString = "SELECT * FROM userstable";
+        $condition = "isdeleted=0";
         if($id != null){
-            $sqlString .= " WHERE userID=" . $id; 
+            $condition .= " WHERE userID=" . $id; 
         }
-        $data = array();
-        $errmsg = "";
-        $code = 0;
-        
-        try{
-            if($result = $this->pdo->query($sqlString)->fetchAll()){
-                foreach($result as $record){
-                    array_push($data, $record);
-                }
-                $result = null;
-                $code = 200;
-                return array("code"=>$code, "data"=>$data); 
-            }
-            else{
-                $errmsg = "No data found";
-                $code = 404;
-            }
+       
+        $result= $this->getDataByTable("userstable", $condition,$this->pdo);
+        if($result['code'] == 200){
+            
+            return $this->generateResponse($result['data'], "success", "Successfully retrieved records.", $result['code']);
         }
-        catch(\PDOException $e){
-            $errmsg = $e->getMessage();
-            $code = 403;
-        }
-        return array("code"=>$code, "errmsg"=>$errmsg);
+        return $this->generateResponse(null, "failed", $result['errmsg'], $result['code']);
     }
-    public function getAdmin($id = null){
-        $sqlString = "SELECT * FROM admintable";
-        if($id != null){
-            $sqlString .= " WHERE adminID=" . $id; 
-        }
-        $data = array();
-        $errmsg = "";
-        $code = 0;
-        
-        try{
-            if($result = $this->pdo->query($sqlString)->fetchAll()){
-                foreach($result as $record){
-                    array_push($data, $record);
-                }
-                $result = null;
-                $code = 200;
-                return array("code"=>$code, "data"=>$data); 
-            }
-            else{
-                $errmsg = "No data found";
-                $code = 404;
-            }
-        }
-        catch(\PDOException $e){
-            $errmsg = $e->getMessage();
-            $code = 403;
-        }
-        return array("code"=>$code, "errmsg"=>$errmsg);
-    }
-    public function getTransaction(){
-        return "this is my get transaction endpoint.";
     }
     
-}
+
 ?>

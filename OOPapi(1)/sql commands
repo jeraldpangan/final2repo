@@ -61,3 +61,19 @@ INNER JOIN carstable ON bookingtable.carID = carstable.carID
 SET bookingtable.daily_rate = carstable.daily_rate
 WHERE bookingtable.daily_rate IS NULL;
 
+//debugging null records
+UPDATE 
+    billingtable b
+JOIN 
+    bookingtable bo ON b.bookingID = bo.bookingID
+SET 
+    b.carID = bo.carID
+WHERE 
+    b.carID IS NULL;
+
+UPDATE billingtable b
+JOIN bookingtable bo ON b.bookingID = bo.bookingID
+JOIN carstable c ON bo.carID = c.carID
+SET b.daily_rate = c.daily_rate,
+    b.total_cost = bo.total_cost
+WHERE b.daily_rate IS NULL OR b.total_cost IS NULL;
