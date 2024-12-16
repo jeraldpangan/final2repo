@@ -72,7 +72,7 @@ class Patch{
         
         return array("errmsg"=>$errmsg, "code"=>$code);
     }
-    public function patchUserAccount($body, $id){
+   /* public function patchUserAccount($body, $id){
         $values = [];
         $errmsg = "";
         $code = 0;
@@ -96,7 +96,7 @@ class Patch{
         
         return array("errmsg"=>$errmsg, "code"=>$code);
     }
-    
+    */
     public function archiveUsers($id){
         
         $errmsg = "";

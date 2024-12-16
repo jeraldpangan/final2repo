@@ -12,6 +12,7 @@ class Authentication{
         
         return $headers['Authorization']==$this->getToken();
     }
+    
     private function getToken(){
         $headers=getallheaders();
         $sqlString = "SELECT token FROM accountstable WHERE user_email=?";
