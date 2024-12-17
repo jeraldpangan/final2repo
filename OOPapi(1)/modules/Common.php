@@ -47,7 +47,7 @@ class Common {
         $filename = date("Y-m-d") . ".log";
         $datetime = date("Y-m-d H:i:s");
         $logMessage = "$datetime,$method,$user,$action" . PHP_EOL;
-        file_put_contents("./logs/$filename", $logMessage, FILE_APPEND | LOCK_EX);
+       // file_put_contents("./logs/$filename", $logMessage, FILE_APPEND | LOCK_EX);
         error_log($logMessage, 3, "./logs/$filename");
     }
 }

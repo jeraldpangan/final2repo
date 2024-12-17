@@ -69,10 +69,11 @@ class Post extends Common{
     
             $code = 200;
             $data = null;
-            $result= array("message" => $message, "data" => $data, "code" => $code);
+            return array("message" => $message, "data" => $data, "code" => $code);
             if($result['code'] == 200){
+
                 $this->logger("Jerald", "POST", "Created a new user record");
-                return $this->generateResponse($result['data'], "success", "Successfully created a new record.", $result['code']);
+                return $this->generateResponse($result['data'], "success", "Successfully created a new record.", $result['code']);	
               }
               $this->logger("Jerald", "POST", $result['errmsg']);
               return $this->generateResponse(null, "failed", $result['errmsg'], $result['code']);
