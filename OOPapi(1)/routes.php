@@ -115,6 +115,9 @@ switch($_SERVER['REQUEST_METHOD']){
                 echo json_encode($patch->patchUsers($body, $request[1]));
             break;
             
+            case "useraccount":
+                echo json_encode($patch->patchUserAccount($body));
+            break;
             default:
             http_response_code(400);
                 echo "Invalid  Endpoint";
@@ -139,6 +142,8 @@ switch($_SERVER['REQUEST_METHOD']){
             break;
             case "destroyusers":
                 echo json_encode($delete->deleteUsers($request[1]));
+            break;
+            case "destroybooking":
             break;
     default:
         http_response_code(400);
