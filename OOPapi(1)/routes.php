@@ -143,8 +143,6 @@ switch($_SERVER['REQUEST_METHOD']){
             case "destroyusers":
                 echo json_encode($delete->deleteUsers($request[1]));
             break;
-            case "destroybooking":
-            break;
     default:
         http_response_code(400);
         echo "Invalid Request Method";
